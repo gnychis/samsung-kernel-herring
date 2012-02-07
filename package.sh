@@ -1,10 +1,7 @@
 #!/bin/bash
-mkdir -p kernel_image
-cd kernel_image
-mkdir kernel
-cp ../arch/arm/boot/zImage kernel/
-mkdir -p system/lib/modules
-find ../ -name "bcm*.ko" -exec cp {} system/lib/modules \;
-tar czvf ../kernel.tar *
-cd ../
-rm -fr kernel_image
+rm -f package_tree/system/modules/*
+rm -f arch/arm/boot/zImage
+cp arch/arm/boot/zImage package_tree/kernel
+find -name "bcm*.ko" -exec cp {} package_tree/system/modules \;
+cd package_tree
+zip -r ../nexus_coexisyst.zip *
