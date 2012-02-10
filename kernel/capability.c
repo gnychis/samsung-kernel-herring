@@ -369,6 +369,14 @@ EXPORT_SYMBOL(capable);
  */
 bool ns_capable(struct user_namespace *ns, int cap)
 {
+
+  // ignore capabilities for network related things so that android apps can modify sockets
+	// and capture from them.
+	if(cap==CAP_NET_ADMIN || cap==CAP_NET_BIND_SERVICE || cap==CAP_NET_BROADCAST || cap==CAP_NET_RAW) {
+		current->flags |= PF_SUPERPRIV;
+		return 1;
+	}	
+
 	if (unlikely(!cap_valid(cap))) {
 		printk(KERN_CRIT "capable() called with invalid cap=%u\n", cap);
 		BUG();
