@@ -1,5 +1,4 @@
 #!/bin/bash
-mkdir -p package_tree/system/modules
 rm -f package_tree/system/modules/*
 rm -f package_tree/kernel/zImage
 cp arch/arm/boot/zImage package_tree/kernel
