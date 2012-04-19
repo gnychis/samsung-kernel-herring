@@ -1,4 +1,7 @@
 #!/bin/bash
 make ARCH=arm clean
 make ARCH=arm herring_defconfig
-make -j4 ARCH=arm CROSS_COMPILE=arm-eabi-
+make ARCH=arm CROSS_COMPILE=arm-eabi-
+cd ../compat-wireless-3.0.9-1/
+./make.sh
+cd ../usbhost-kernel
