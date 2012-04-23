@@ -510,7 +510,7 @@ static void fw_destroy_instance(struct firmware_priv *fw_priv)
 	device_unregister(f_dev);
 }
 
-static int _request_firmware(const struct firmware **firmware_p,
+int _request_firmware(const struct firmware **firmware_p,
 			     const char *name, struct device *device,
 			     bool uevent, bool nowait)
 {
@@ -715,5 +715,6 @@ fs_initcall(firmware_class_init);
 module_exit(firmware_class_exit);
 
 EXPORT_SYMBOL(release_firmware);
+EXPORT_SYMBOL(_request_firmware);
 EXPORT_SYMBOL(request_firmware);
 EXPORT_SYMBOL(request_firmware_nowait);
