@@ -1,7 +1,7 @@
 ui_print("");
 ui_print("************************************************");
 ui_print("*                                              *");
-ui_print("*              USB HOST DRIVER                 *");
+ui_print("*            ANDROID WMON KERNEL               *");
 ui_print("*                                              *");
 ui_print("************************************************");
 ui_print("");
