@@ -226,6 +226,8 @@ static ssize_t firmware_loading_store(struct device *dev,
 	int loading = simple_strtol(buf, NULL, 10);
 	int i;
 
+  printk("[awmon] in firmware_loading_store to set the value\n");
+
 	switch (loading) {
 	case 1:
 		mutex_lock(&fw_lock);
@@ -383,6 +385,8 @@ static ssize_t firmware_data_write(struct file *filp, struct kobject *kobj,
 	struct firmware *fw;
 	ssize_t retval;
 
+  printk("[awmon] in firmware_data_write\n");
+
 	if (!capable(CAP_SYS_RAWIO))
 		return -EPERM;
 
@@ -449,6 +453,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
 		goto err_out;
 	}
 
+  printk("[awmon] in fw_create_instace with firmware(%s) and nowait(%d)\n", firmware, nowait);
 	fw_priv->fw = firmware;
 	fw_priv->nowait = nowait;
 	strcpy(fw_priv->fw_id, fw_name);
@@ -460,9 +465,11 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
 
 	device_initialize(f_dev);
 	dev_set_name(f_dev, "%s", dev_name(device));
+  printk("[awmon] initialized device at %s\n", device);
 	f_dev->parent = device;
 	f_dev->class = &firmware_class;
 
+  printk("[awmon] dev_set_uevent_suppress\n");
 	dev_set_uevent_suppress(f_dev, true);
 
 	/* Need to pin this module until class device is destroyed */
@@ -474,14 +481,18 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
 		goto err_put_dev;
 	}
 
+  printk("[awmon] calling device_create_bin_file\n");
 	error = device_create_bin_file(f_dev, &firmware_attr_data);
 	if (error) {
+    printk("[awmon] error creating sysfs bin file\n");
 		dev_err(device, "%s: sysfs_create_bin_file failed\n", __func__);
 		goto err_del_dev;
 	}
 
+  printk("[awmon] calling device_create_file\n");
 	error = device_create_file(f_dev, &dev_attr_loading);
 	if (error) {
+    printk("[awmon] failed to call device_create_file\n");
 		dev_err(device, "%s: device_create_file failed\n", __func__);
 		goto err_del_bin_attr;
 	}
@@ -489,6 +500,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
 	if (uevent)
 		dev_set_uevent_suppress(f_dev, false);
 
+  printk("[awmon] returning from fw_create_instance\n");
 	return fw_priv;
 
 err_del_bin_attr:
@@ -540,11 +552,15 @@ int _request_firmware(const struct firmware **firmware_p,
 		goto out;
 	}
 
+  printk("[awmon] requesting firmware %s\n", name);
+
 	if (uevent)
 		dev_dbg(device, "firmware: requesting %s\n", name);
 
+  printk("[awmon] calling fw_create_instance\n");
 	fw_priv = fw_create_instance(firmware, name, device, uevent, nowait);
 	if (IS_ERR(fw_priv)) {
+    printk("[awmon] error in fw_priv value\n");
 		retval = PTR_ERR(fw_priv);
 		goto out;
 	}
@@ -558,14 +574,19 @@ int _request_firmware(const struct firmware **firmware_p,
 		kobject_uevent(&fw_priv->dev.kobj, KOBJ_ADD);
 	}
 
+  printk("[awmon] waiting for completion\n");
 	wait_for_completion(&fw_priv->completion);
 
+  printk("[awmon] setting bit to FW_STATUS_DONE\n");
 	set_bit(FW_STATUS_DONE, &fw_priv->status);
+  printk("[awmon] removing timeout timer\n");
 	del_timer_sync(&fw_priv->timeout);
 
 	mutex_lock(&fw_lock);
-	if (!fw_priv->fw->size || test_bit(FW_STATUS_ABORT, &fw_priv->status))
+	if (!fw_priv->fw->size || test_bit(FW_STATUS_ABORT, &fw_priv->status)) {
+    printk("[awmon] removing timeout timer\n");
 		retval = -ENOENT;
+  }
 	fw_priv->fw = NULL;
 	mutex_unlock(&fw_lock);
 
@@ -632,6 +653,8 @@ static int request_firmware_work_func(void *arg)
 	const struct firmware *fw;
 	int ret;
 
+  printk("[awmon] in request_firmware_work_func()\n");
+
 	if (!arg) {
 		WARN_ON(1);
 		return 0;
@@ -672,6 +695,8 @@ request_firmware_nowait(
 {
 	struct task_struct *task;
 	struct firmware_work *fw_work;
+
+  printk("[awmon] in request_firmware_nowait\n");
 
 	fw_work = kzalloc(sizeof (struct firmware_work), gfp);
 	if (!fw_work)
