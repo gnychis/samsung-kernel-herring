@@ -47,7 +47,7 @@ extern "C"
 #define OTG_DBG_OTGHCDI_LIST	false
 #define OTG_DBG_OTGHCDI_MEM		false
 
-#define OTG_DBG_TRANSFER		false
+#define OTG_DBG_TRANSFER		true
 #define OTG_DBG_SCHEDULE		false
 #define OTG_DBG_OCI				false
 #define OTG_DBG_DONETRASF		false

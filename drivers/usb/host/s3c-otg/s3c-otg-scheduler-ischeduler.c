@@ -149,6 +149,7 @@ int  	remove_ed_from_scheduler(ed_t 	*remove_ed)
 int cancel_to_transfer_td(struct sec_otghost *otghost, td_t *cancel_td)
 {
 	if(cancel_td->is_transfer_done) {
+    printk("[awmon-isched] returning USB_ERR_FAIL due to is_transfer_done being true\n");
 		return USB_ERR_FAIL;
 	}
 
@@ -156,8 +157,10 @@ int cancel_to_transfer_td(struct sec_otghost *otghost, td_t *cancel_td)
 		int err;
 
 		err = oci_stop_transfer(otghost, cancel_td->cur_stransfer.alloc_chnum);
+    printk("[awmon-isched] err returned by oci_stop_transfer was %d\n", err);
 
 		if(err == USB_ERR_SUCCESS) {
+      printk("[awmon-isched] err was USB_ERR_SUCCESS\n");
 			set_transferring_td_array(cancel_td->cur_stransfer.alloc_chnum,0);
 
 			cancel_td->cur_stransfer.alloc_chnum 		= 	CH_NONE;
@@ -170,15 +173,20 @@ int cancel_to_transfer_td(struct sec_otghost *otghost, td_t *cancel_td)
 				cancel_td->cur_stransfer.ed_desc_p->endpoint_type == CONTROL_TRANSFER ) {
 				dec_nonperio_chnum();
 			}
+      printk("[awmon-isched] returning err, value: %d\n", err);
 			return err;
 		}
 		else {
+      printk("[awmon-isched] returning err in else statement, value: %d\n", err);
 			return err;
 		}
 	}
 	else {
+    printk("[awmon-isched] returning USB_ERR_FAIL\n");
 		return USB_ERR_FAIL;
 	}
+  
+  printk("[awmon-isched] returning USB_ERR_SUCCESS\n");
 	return USB_ERR_SUCCESS;
 }
 

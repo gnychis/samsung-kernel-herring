@@ -696,7 +696,10 @@ int  	cancel_transfer(struct sec_otghost *otghost,
 	otg_list_head	*tmp_list_p, *tmp_list2_p;
 	bool		cond_found = false;
 
+  printk("[awmon-ct] entering cancel_transfer\n");
+
 	if(parent_ed == NULL || cancel_td == NULL) {
+    printk("[awmon-ct] ... parent_id or cancel_td happened to be null\n");
 		otg_dbg(OTG_DBG_TRANSFER, "parent_ed == NULL || cancel_td == NULL\n");
 		cancel_td->error_code = USB_ERR_NOELEMENT;
 		otg_usbcore_giveback(cancel_td);
@@ -705,12 +708,14 @@ int  	cancel_transfer(struct sec_otghost *otghost,
 
 	otg_list_for_each_safe(tmp_list_p, tmp_list2_p, &parent_ed->td_list_entry) {
 		if(&cancel_td->td_list_entry == tmp_list_p) {
+      printk("[awmon-ct] ... the condition was found\n");
 			cond_found = true;
 			break;
 		}
 	}
 
 	if (cond_found != true) {
+    printk("[awmon-ct] ... cond_found != true\n");
 		otg_dbg(OTG_DBG_TRANSFER, "cond_found != true \n");
 		cancel_td->error_code = USB_ERR_NOELEMENT;
 		otg_usbcore_giveback(cancel_td);
@@ -721,10 +726,12 @@ int  	cancel_transfer(struct sec_otghost *otghost,
 	if(cancel_td->is_transferring) {
 		if(!parent_ed->ed_status.is_in_transfer_ready_q) {
 			err = cancel_to_transfer_td(otghost, cancel_td);
+      printk("[awmon-ct] ... err is now changed to cancel_to_transfer_td: %d\n", err);
 
 			parent_ed->ed_status.in_transferring_td = 0;
 
 			if(err != USB_ERR_SUCCESS) {
+        printk("[awmon-ct] ... err != USB_ERR_SUCCESS, setting error and giving back cancel_td\n");
 				otg_dbg(OTG_DBG_TRANSFER, "cancel_to_transfer_td \n");
 				cancel_td->error_code = err;
 				otg_usbcore_giveback(cancel_td);
@@ -738,10 +745,12 @@ int  	cancel_transfer(struct sec_otghost *otghost,
 		parent_ed->num_td--;
 	}
 	else {
+    printk("[awmon-ct] ... popping td_list_entry\n");
 		otg_list_pop(&cancel_td->td_list_entry);
 		parent_ed->num_td--;
 
 		if(parent_ed->num_td==0) {
+      printk("[awmon-ct] ... removing parent_id with remove_ed_from_scheduler()\n");
 			remove_ed_from_scheduler(parent_ed);
 		}
 	}
@@ -751,11 +760,13 @@ int  	cancel_transfer(struct sec_otghost *otghost,
           // because the deleted td was not the active td then we will now put ed into the scheduler list twice, thus
           // corrupting it.
           // parent_ed->is_need_to_insert_scheduler = true;
+    printk("[awmon-ct] ... insert_ed_to_scheduler(otghost,parent_id);\n");
 		insert_ed_to_scheduler(otghost, parent_ed);
 	}
 	else {
 		if(parent_ed->ed_desc.endpoint_type == INT_TRANSFER ||
 			parent_ed->ed_desc.endpoint_type == ISOCH_TRANSFER) {
+      printk("[awmon-ct] ... endpoint_type was INT_TRANSFER or ISOCH_TRANSFER\n");
 			//Release channel and usb bus resource for this ed_t.
 			//but, not release memory for this ed_t.
 			free_usb_resource_for_periodic(parent_ed->ed_desc.used_bus_time,
@@ -767,6 +778,8 @@ int  	cancel_transfer(struct sec_otghost *otghost,
 	}
 	// the caller of this functions should call otg_usbcore_giveback(cancel_td);
 	cancel_td->error_code = USB_ERR_DEQUEUED;
+  printk("[awmon-ct] ... setting error_code to USB_ERR_DEQUEUED\n");
+  printk("[awmon-ct] USB_ERR_DEQUEUED == %d\n", USB_ERR_DEQUEUED);
 	// kevinh - fixed bug, the caller should take care of calling delete_td because they might still want to do some
 	// operations on that memory
 	// delete_td(cancel_td);
@@ -774,6 +787,7 @@ int  	cancel_transfer(struct sec_otghost *otghost,
 
 ErrorStatus:
 
+  printk("[awmon-ct] ... returning err: %d\n", err);
 	return err;
 }
 

@@ -504,7 +504,9 @@ int s5pc110_otghcd_urb_dequeue(
 	}
 
 	ret_val = cancel_transfer(otghost, cancel_td->parent_ed_p, cancel_td);
-	if(ret_val != USB_ERR_DEQUEUED && ret_val != USB_ERR_NOELEMENT) {
+  printk("[awmon] ret_val from cancel_transfer() was: %d\n", ret_val);
+  printk("[awmon] USB_ERR_DEQUEUED == %d\n", USB_ERR_DEQUEUED);
+	if(ret_val != USB_ERR_SUCCESS) {
 		otg_err(OTG_DBG_OTGHCDI_HCD, "fail to cancel_transfer() \n");
 		otg_usbcore_giveback(cancel_td);
 		spin_unlock_irq_save_otg(&otghost->lock, spin_lock_flag);

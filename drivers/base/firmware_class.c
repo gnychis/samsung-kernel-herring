@@ -387,20 +387,26 @@ static ssize_t firmware_data_write(struct file *filp, struct kobject *kobj,
 
   printk("[awmon] in firmware_data_write\n");
 
-	if (!capable(CAP_SYS_RAWIO))
+	if (!capable(CAP_SYS_RAWIO)) {
 		return -EPERM;
+    printk("[awmon] ... not cable to write (-EPERM)\n");
+  }
 
 	mutex_lock(&fw_lock);
 	fw = fw_priv->fw;
 	if (!fw || test_bit(FW_STATUS_DONE, &fw_priv->status)) {
+    printk("[awmon] ... error -ENODEV\n");
 		retval = -ENODEV;
 		goto out;
 	}
 	retval = fw_realloc_buffer(fw_priv, offset + count);
-	if (retval)
+	if (retval) {
+    printk("[awmon] ... hit retval to jump to out\n");
 		goto out;
+  }
 
 	retval = count;
+  printk("[awmon] ... current count is: %d\n", count);
 
 	while (count) {
 		void *page_data;
@@ -419,6 +425,7 @@ static ssize_t firmware_data_write(struct file *filp, struct kobject *kobj,
 	}
 
 	fw->size = max_t(size_t, offset, fw->size);
+    printk("[awmon] ... fw->size: %d\n", fw->size);
 out:
 	mutex_unlock(&fw_lock);
 	return retval;
@@ -584,13 +591,14 @@ int _request_firmware(const struct firmware **firmware_p,
 
 	mutex_lock(&fw_lock);
 	if (!fw_priv->fw->size || test_bit(FW_STATUS_ABORT, &fw_priv->status)) {
-    printk("[awmon] removing timeout timer\n");
+    printk("[awmon] error with FW size or FW_STATUS_ABORT\n");
 		retval = -ENOENT;
   }
 	fw_priv->fw = NULL;
 	mutex_unlock(&fw_lock);
 
 	fw_destroy_instance(fw_priv);
+  printk("[awmon] destroying the fw instance\n");
 
 out:
 	if (retval) {
